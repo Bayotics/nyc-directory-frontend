@@ -1,0 +1,74 @@
+.business-card-gradient {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .business-card-gradient::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, var(--gradient-start, #6366f1), var(--gradient-end, #8b5cf6));
+    opacity: 0.8;
+    z-index: 1;
+  }
+  
+  .business-card-gradient.restaurant {
+    --gradient-start: #f97316;
+    --gradient-end: #ef4444;
+  }
+  
+  .business-card-gradient.retail {
+    --gradient-start: #06b6d4;
+    --gradient-end: #3b82f6;
+  }
+  
+  .business-card-gradient.healthcare {
+    --gradient-start: #10b981;
+    --gradient-end: #14b8a6;
+  }
+  
+  .business-card-gradient.professional {
+    --gradient-start: #6366f1;
+    --gradient-end: #8b5cf6;
+  }
+  
+  .business-card-gradient.tech {
+    --gradient-start: #3b82f6;
+    --gradient-end: #8b5cf6;
+  }
+  
+  .business-card-gradient.education {
+    --gradient-start: #f59e0b;
+    --gradient-end: #f97316;
+  }
+  
+  .business-card-gradient.entertainment {
+    --gradient-start: #ec4899;
+    --gradient-end: #8b5cf6;
+  }
+  
+  .business-card-gradient.fitness {
+    --gradient-start: #14b8a6;
+    --gradient-end: #0ea5e9;
+  }
+  
+  .business-card-gradient.default {
+    --gradient-start: #6366f1;
+    --gradient-end: #8b5cf6;
+  }
+  
+  .business-card-gradient .card-content {
+    position: relative;
+    z-index: 2;
+  }
+  
+  .business-card-gradient .card-icon {
+    font-size: 3rem;
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 1rem;
+  }
+  
+  
