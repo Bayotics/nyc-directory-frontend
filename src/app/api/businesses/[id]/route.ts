@@ -5,6 +5,13 @@ import { ObjectId } from "mongodb"
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const id = params.id
+    console.log(`API route: Fetching business with ID: ${id}`)
+
+    // Check if the ID is a valid MongoDB ObjectId
+    if (!ObjectId.isValid(id)) {
+      console.error(`Invalid ObjectId format: ${id}`)
+      return NextResponse.json({ message: "Invalid business ID format" }, { status: 400 })
+    }
 
     // Connect to the database
     const { db } = await connectToDatabase()
@@ -18,13 +25,15 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     })
 
     if (!business) {
+      console.error(`Business not found with ID: ${id}`)
       return NextResponse.json({ message: "Business not found" }, { status: 404 })
     }
 
+    console.log(`Found business: ${business.name}`)
     return NextResponse.json(business)
   } catch (error) {
     console.error("Error fetching business:", error)
-    return NextResponse.json({ message: "Server error" }, { status: 500 })
+    return NextResponse.json({ message: "Server error", error: String(error) }, { status: 500 })
   }
 }
 
@@ -32,6 +41,11 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   try {
     const id = params.id
     const body = await request.json()
+
+    // Check if the ID is a valid MongoDB ObjectId
+    if (!ObjectId.isValid(id)) {
+      return NextResponse.json({ message: "Invalid business ID format" }, { status: 400 })
+    }
 
     // Connect to the database
     const { db } = await connectToDatabase()
@@ -60,6 +74,11 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const id = params.id
+
+    // Check if the ID is a valid MongoDB ObjectId
+    if (!ObjectId.isValid(id)) {
+      return NextResponse.json({ message: "Invalid business ID format" }, { status: 400 })
+    }
 
     // Connect to the database
     const { db } = await connectToDatabase()

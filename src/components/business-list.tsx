@@ -195,7 +195,12 @@ export default function BusinessList() {
       }
     }
 
-    fetchBusinesses()
+    // Use a debounce to prevent too many API calls when search params change
+    const timer = setTimeout(() => {
+      fetchBusinesses()
+    }, 300)
+
+    return () => clearTimeout(timer)
   }, [search, category, sortBy])
 
   if (loading) {

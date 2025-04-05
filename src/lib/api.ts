@@ -1,18 +1,31 @@
 // Get the API base URL from environment variables
-// In production (Vercel), we use relative URLs
-// In development, we can specify a different base URL if needed
+// In production (Vercel), we use the NEXT_PUBLIC_API_URL or fall back to relative URLs
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || ""
 
 // Helper function for API calls
 export async function fetchAPI(endpoint: string, options = {}) {
   const url = `${API_BASE_URL}${endpoint}`
-  const response = await fetch(url, options)
+  console.log(`Fetching from: ${url}`) // Add logging to help debug
 
-  if (!response.ok) {
-    throw new Error(`API error: ${response.status}`)
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...(options as any).headers,
+      },
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(`API error: ${response.status} - ${errorText}`)
+    }
+
+    return response.json()
+  } catch (error) {
+    console.error(`API request failed for ${url}:`, error)
+    throw error
   }
-
-  return response.json()
 }
 
 // Business-related API calls
@@ -26,6 +39,7 @@ export const businessAPI = {
 
   // Get a single business by ID
   getBusiness: async (id: string) => {
+    console.log(`API client: Fetching business with ID: ${id}`)
     return fetchAPI(`/api/businesses/${id}`)
   },
 
@@ -33,9 +47,6 @@ export const businessAPI = {
   createBusiness: async (data: any) => {
     return fetchAPI("/api/businesses", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
       body: JSON.stringify(data),
     })
   },

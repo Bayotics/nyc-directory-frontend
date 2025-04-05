@@ -76,7 +76,7 @@
   }
   html {
     font-family: var(--font-sans);
-    font-size: 20px; /* Ensure base font size is explicitly set */
+    font-size: 16px; /* Ensure base font size is explicitly set */
   }
   body {
     @apply bg-background text-foreground;

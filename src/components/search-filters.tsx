@@ -39,14 +39,14 @@ export default function SearchFilters() {
   useEffect(() => {
     // Update search term when URL parameter changes
     const searchFromUrl = searchParams.get("search")
-    if (searchFromUrl) {
+    if (searchFromUrl && searchFromUrl !== searchTerm) {
       setSearchTerm(searchFromUrl)
     }
 
     // Fetch categories from API
     const fetchCategories = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/categories")
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/categories`)
         if (response.ok) {
           const data = await response.json()
           setCategories(data)
@@ -57,6 +57,7 @@ export default function SearchFilters() {
     }
 
     fetchCategories()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams])
 
   const handleSearch = (e: React.FormEvent) => {
@@ -80,20 +81,23 @@ export default function SearchFilters() {
   const FilterForm = () => (
     <form onSubmit={handleSearch} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="search">Search</Label>
+        <Label htmlFor="search-mobile">Search</Label>
         <div className="relative">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            id="search"
+            id="search-mobile"
             type="search"
             placeholder="Business name or keyword"
             className="pl-8"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            key="search-input-mobile"
+            autoComplete="off"
           />
         </div>
       </div>
 
+      {/* Rest of the form remains the same */}
       <div className="space-y-2">
         <Label htmlFor="category">Category</Label>
         <Select value={category} onValueChange={setCategory}>
