@@ -1,13 +1,6 @@
 import type { MetadataRoute } from "next"
-import { businessAPI, categoryAPI } from "@/lib/api"
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  // Fetch all businesses from the API
-  const businesses = await businessAPI.getBusinesses()
-
-  // Fetch all categories from the API
-  const categories = await categoryAPI.getCategories()
-
   // Create sitemap entries for static pages
   const staticPages = [
     {
@@ -42,21 +35,45 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ]
 
-  // Create sitemap entries for each business
-  const businessPages = businesses.map((business: any) => ({
-    url: `https://nybusinessdirectory.com/business/${business._id}`,
-    lastModified: new Date(business.dateAdded || new Date()),
-    changeFrequency: "weekly",
-    priority: 0.8,
-  }))
+  // Try to fetch dynamic data, but don't fail the build if it doesn't work
+  let businessPages = []
+  let categoryPages = []
 
-  // Create sitemap entries for each category
-  const categoryPages = categories.map((category: string) => ({
-    url: `https://nybusinessdirectory.com/businesses?category=${encodeURIComponent(category)}`,
-    lastModified: new Date(),
-    changeFrequency: "weekly",
-    priority: 0.7,
-  }))
+  try {
+    // Use relative URL for API calls during build
+    const businessesResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/businesses`, {
+      next: { revalidate: 3600 }, // Revalidate every hour
+    })
+
+    if (businessesResponse.ok) {
+      const businesses = await businessesResponse.json()
+
+      businessPages = businesses.map((business: any) => ({
+        url: `https://nybusinessdirectory.com/business/${business._id}`,
+        lastModified: new Date(business.dateAdded || new Date()),
+        changeFrequency: "weekly",
+        priority: 0.8,
+      }))
+    }
+
+    const categoriesResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/categories`, {
+      next: { revalidate: 3600 }, // Revalidate every hour
+    })
+
+    if (categoriesResponse.ok) {
+      const categories = await categoriesResponse.json()
+
+      categoryPages = categories.map((category: string) => ({
+        url: `https://nybusinessdirectory.com/businesses?category=${encodeURIComponent(category)}`,
+        lastModified: new Date(),
+        changeFrequency: "weekly",
+        priority: 0.7,
+      }))
+    }
+  } catch (error) {
+    console.error("Error generating dynamic sitemap entries:", error)
+    // Continue with just the static pages
+  }
 
   // Combine all entries
   return [...staticPages, ...businessPages, ...categoryPages]

@@ -55,6 +55,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(businesses)
   } catch (error) {
     console.error("Error fetching businesses:", error)
+
+    // During build time, return empty array instead of error
+    if (process.env.NODE_ENV === "production" && process.env.VERCEL_ENV === "production") {
+      return NextResponse.json([])
+    }
+
     return NextResponse.json({ message: "Server error" }, { status: 500 })
   }
 }

@@ -7,7 +7,7 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: ["/api/", "/admin/"],
     },
-    sitemap: "",
+    sitemap: "https://nybusinessdirectory.com/sitemap.xml",
   }
 }
 
