@@ -6,6 +6,5 @@ Allow: /
 Disallow: /api/
 Disallow: /admin/
 
-# Sitemap location
-Sitemap: https://nybusinessdirectory.com/sitemap.xml
+
 
