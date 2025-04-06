@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search, Filter, X } from "lucide-react"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import { categoryAPI } from "@/lib/api"
 
 export default function SearchFilters() {
   const router = useRouter()
@@ -21,6 +22,8 @@ export default function SearchFilters() {
   const [sortBy, setSortBy] = useState(searchParams.get("sortBy") || "newest")
   const [categories, setCategories] = useState<string[]>([])
   const [isMobile, setIsMobile] = useState(false)
+  const [suggestions, setSuggestions] = useState<string[]>([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
 
   useEffect(() => {
     // Check if we're on mobile
@@ -46,11 +49,8 @@ export default function SearchFilters() {
     // Fetch categories from API
     const fetchCategories = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ""}/api/categories`)
-        if (response.ok) {
-          const data = await response.json()
-          setCategories(data)
-        }
+        const data = await categoryAPI.getCategories()
+        setCategories(data)
       } catch (error) {
         console.error("Error fetching categories:", error)
       }
@@ -59,6 +59,22 @@ export default function SearchFilters() {
     fetchCategories()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams])
+
+  // Generate search suggestions based on input
+  useEffect(() => {
+    if (searchTerm.length > 1) {
+      // Filter categories that match the search term
+      const matchingCategories = categories
+        .filter((cat) => cat.toLowerCase().includes(searchTerm.toLowerCase()))
+        .slice(0, 5) // Limit to 5 suggestions
+
+      setSuggestions(matchingCategories)
+      setShowSuggestions(matchingCategories.length > 0)
+    } else {
+      setSuggestions([])
+      setShowSuggestions(false)
+    }
+  }, [searchTerm, categories])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -69,6 +85,23 @@ export default function SearchFilters() {
     if (sortBy) params.set("sortBy", sortBy)
 
     router.push(`/businesses?${params.toString()}`)
+    setShowSuggestions(false)
+  }
+
+  const handleSuggestionClick = (suggestion: string) => {
+    // Update the input field with the selected suggestion
+    setSearchTerm(suggestion)
+
+    // Add a small delay to ensure the UI updates before navigation
+    setTimeout(() => {
+      const params = new URLSearchParams()
+      params.set("search", suggestion)
+      if (category) params.set("category", category)
+      if (sortBy) params.set("sortBy", sortBy)
+
+      router.push(`/businesses?${params.toString()}`)
+      setShowSuggestions(false)
+    }, 50)
   }
 
   const clearFilters = () => {
@@ -87,17 +120,44 @@ export default function SearchFilters() {
           <Input
             id="search-mobile"
             type="search"
-            placeholder="Business name or keyword"
+            placeholder="Business name or category"
             className="pl-8"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             key="search-input-mobile"
             autoComplete="off"
+            onFocus={() => setShowSuggestions(suggestions.length > 0)}
+            onBlur={() => {
+              // Delay hiding suggestions to allow for clicks
+              setTimeout(() => setShowSuggestions(false), 200)
+            }}
           />
+
+          {/* Search suggestions */}
+          {showSuggestions && (
+            <div className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-lg">
+              <ul className="py-1">
+                {suggestions.map((suggestion, index) => (
+                  <li
+                    key={index}
+                    className="px-4 py-2 hover:bg-muted cursor-pointer flex items-center"
+                    onMouseDown={(e) => {
+                      // Using onMouseDown instead of onClick to prevent the onBlur from hiding suggestions
+                      // before the click event fires
+                      e.preventDefault()
+                      handleSuggestionClick(suggestion)
+                    }}
+                  >
+                    <Search className="h-3 w-3 mr-2 text-muted-foreground" />
+                    <span>{suggestion}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Rest of the form remains the same */}
       <div className="space-y-2">
         <Label htmlFor="category">Category</Label>
         <Select value={category} onValueChange={setCategory}>

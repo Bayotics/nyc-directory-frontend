@@ -20,6 +20,12 @@ export async function GET(request: NextRequest) {
         { category: { $regex: search, $options: "i" } },
         { address: { $regex: search, $options: "i" } },
       ]
+      const categoryExactMatch = {
+        category: new RegExp(`^${search}$`, "i"),
+      }
+
+      // Add this as a separate condition to the $or array
+      query.$or.push(categoryExactMatch)
     }
 
     // Add category filter if provided

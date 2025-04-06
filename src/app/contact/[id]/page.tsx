@@ -15,6 +15,9 @@ import { z } from "zod"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useParams } from "next/navigation"
+import { businessAPI } from "@/lib/api"
+
 
 // Define a schema for form validation
 const contactFormSchema = z.object({
@@ -24,6 +27,14 @@ const contactFormSchema = z.object({
   message: z.string().min(10, { message: "Message must be at least 10 characters" }),
 })
 
+async function getBusiness(id: string) {
+  try {
+    return await businessAPI.getBusiness(id)
+  } catch (error) {
+    console.error("Error fetching business:", error)
+    return null
+  }
+}
 type ContactFormData = z.infer<typeof contactFormSchema>
 
 interface Business {
@@ -42,6 +53,9 @@ export default function ContactBusinessPage({ params }: { params: { id: string }
   const [business, setBusiness] = useState<Business | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const _businessId = useParams()
+  const parsedId = Array.isArray(_businessId.id) ? _businessId.id[0] : _businessId.id
+  console.log(parsedId)
 
   const [formData, setFormData] = useState<ContactFormData>({
     name: "",
@@ -55,22 +69,25 @@ export default function ContactBusinessPage({ params }: { params: { id: string }
     const fetchBusiness = async () => {
       try {
         setIsLoading(true)
-        const response = await fetch(`http://localhost:5000/api/businesses/${params.id}`)
+        const response = await getBusiness(parsedId)
+        console.log(response)
 
-        if (!response.ok) {
-          if (response.status === 404) {
-            notFound()
-          }
-          throw new Error("Failed to fetch business details")
-        }
+        // if (!response.ok) {
+        //   if (response.status === 404) {
+        //     notFound()
+        //   }
+        //   throw new Error("Failed to fetch business details")
+        // }
 
-        const data = await response.json()
-        setBusiness(data)
+        // const data = await response.json()
+        // console.log(data)
+        setBusiness(response)
 
         // Pre-fill the subject with the business name
         setFormData((prev) => ({
           ...prev,
-          subject: `Inquiry about ${data.name}`,
+          // subject: `Inquiry about ${response.name}`,
+          subject: `Inquiry about...`,
         }))
       } catch (err) {
         console.error("Error fetching business:", err)

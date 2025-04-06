@@ -104,7 +104,7 @@ export default function FeaturedBusinesses() {
   // Function to get the appropriate image for each business card
   const getBusinessImage = (index: number, businessId: string, category: string) => {
     // For the first 10 businesses, use the provided images
-    if (index < 10) {
+    if (index < 11) {
       return `/images/business${index + 1}${index === 0 || index === 7 ? ".png" : ".jpeg"}`
     }
 

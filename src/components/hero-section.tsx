@@ -2,16 +2,50 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Search, MapPin, Building, TrendingUp } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { categoryAPI } from "@/lib/api"
 
 export default function HeroSection() {
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
+  const [categories, setCategories] = useState<string[]>([])
+  const [suggestions, setSuggestions] = useState<string[]>([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
+
+  useEffect(() => {
+    // Fetch categories for suggestions
+    const fetchCategories = async () => {
+      try {
+        const data = await categoryAPI.getCategories()
+        setCategories(data)
+      } catch (error) {
+        console.error("Error fetching categories:", error)
+      }
+    }
+
+    fetchCategories()
+  }, [])
+
+  // Generate search suggestions based on input
+  useEffect(() => {
+    if (searchQuery.length > 1) {
+      // Filter categories that match the search query
+      const matchingCategories = categories
+        .filter((cat) => cat.toLowerCase().includes(searchQuery.toLowerCase()))
+        .slice(0, 5) // Limit to 5 suggestions
+
+      setSuggestions(matchingCategories)
+      setShowSuggestions(matchingCategories.length > 0)
+    } else {
+      setSuggestions([])
+      setShowSuggestions(false)
+    }
+  }, [searchQuery, categories])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -19,6 +53,16 @@ export default function HeroSection() {
       // Route to the businesses page with the search query
       router.push(`/businesses?search=${encodeURIComponent(searchQuery)}`)
     }
+  }
+
+  const handleSuggestionClick = (suggestion: string) => {
+    // Update the input field with the selected suggestion
+    setSearchQuery(suggestion)
+
+    // Add a small delay to ensure the UI updates before navigation
+    setTimeout(() => {
+      router.push(`/businesses?search=${encodeURIComponent(suggestion)}`)
+    }, 50)
   }
 
   const containerVariants = {
@@ -102,7 +146,35 @@ export default function HeroSection() {
                   className="pl-10 pr-4 py-6 rounded-lg sm:rounded-l-lg sm:rounded-r-none border-r-0 text-base md:text-lg"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => setShowSuggestions(suggestions.length > 0)}
+                  onBlur={() => {
+                    // Delay hiding suggestions to allow for clicks
+                    setTimeout(() => setShowSuggestions(false), 200)
+                  }}
                 />
+
+                {/* Search suggestions */}
+                {showSuggestions && (
+                  <div className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-lg text-left">
+                    <ul className="py-1">
+                      {suggestions.map((suggestion, index) => (
+                        <li
+                          key={index}
+                          className="px-4 py-2 hover:bg-muted cursor-pointer flex items-center"
+                          onMouseDown={(e) => {
+                            // Using onMouseDown instead of onClick to prevent the onBlur from hiding suggestions
+                            // before the click event fires
+                            e.preventDefault()
+                            handleSuggestionClick(suggestion)
+                          }}
+                        >
+                          <Search className="h-3 w-3 mr-2 text-muted-foreground" />
+                          <span>{suggestion}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
               <Button type="submit" size="lg" className="rounded-lg sm:rounded-l-none sm:rounded-r-lg px-6">
                 <Search className="mr-2 h-5 w-5" />
