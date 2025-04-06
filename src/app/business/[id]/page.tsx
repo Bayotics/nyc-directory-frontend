@@ -1,3 +1,5 @@
+'use client'
+
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { MapPin, Phone, Globe, Clock, Calendar, ArrowLeft, Navigation } from "lucide-react"
@@ -8,47 +10,48 @@ import BusinessMap from "@/components/business-map"
 import Image from "next/image"
 import { JsonLd } from "@/components/json-ld"
 import { businessAPI } from "@/lib/api"
+import { useParams } from "next/navigation"
 
 interface BusinessPageProps {
   params: { id: string }
 }
 
 // Generate metadata for the business page
-export async function generateMetadata({ params }: BusinessPageProps): Promise<Metadata> {
-  const business = await getBusiness(params.id)
+// export async function generateMetadata({ params }: BusinessPageProps): Promise<Metadata> {
+//   const business = await getBusiness(params.id)
 
-  if (!business) {
-    return {
-      title: "Business Not Found",
-      description: "The business you are looking for could not be found.",
-    }
-  }
+//   if (!business) {
+//     return {
+//       title: "Business Not Found",
+//       description: "The business you are looking for could not be found.",
+//     }
+//   }
 
-  return {
-    title: `${business.name} | ${business.category} in New York`,
-    description:
-      business.description.length > 160 ? business.description.substring(0, 157) + "..." : business.description,
-    keywords: [business.name, business.category, "New York business", "NYC", business.address],
-    alternates: {
-      canonical: `/business/${params.id}`,
-    },
-    openGraph: {
-      title: `${business.name} | ${business.category} in New York`,
-      description:
-        business.description.length > 160 ? business.description.substring(0, 157) + "..." : business.description,
-      url: `https://nybusinessdirectory.com/business/${params.id}`,
-      type: "website",
-      images: [
-        {
-          url: getBusinessImage(business._id, business.category),
-          width: 800,
-          height: 400,
-          alt: business.name,
-        },
-      ],
-    },
-  }
-}
+//   return {
+//     title: `${business.name} | ${business.category} in New York`,
+//     description:
+//       business.description.length > 160 ? business.description.substring(0, 157) + "..." : business.description,
+//     keywords: [business.name, business.category, "New York business", "NYC", business.address],
+//     alternates: {
+//       canonical: `/business/${params.id}`,
+//     },
+//     openGraph: {
+//       title: `${business.name} | ${business.category} in New York`,
+//       description:
+//         business.description.length > 160 ? business.description.substring(0, 157) + "..." : business.description,
+//       url: `https://nybusinessdirectory.com/business/${params.id}`,
+//       type: "website",
+//       images: [
+//         {
+//           url: getBusinessImage(business._id, business.category),
+//           width: 800,
+//           height: 400,
+//           alt: business.name,
+//         },
+//       ],
+//     },
+//   }
+// }
 
 async function getBusiness(id: string) {
   try {
@@ -58,6 +61,10 @@ async function getBusiness(id: string) {
     return null
   }
 }
+
+
+
+// const fetchSingleBusiness = businessAPI.getBusiness(_businessId.id)
 
 // Function to get a consistent but unique image for each business
 const getBusinessImage = (businessId: string, category: string) => {
@@ -84,8 +91,11 @@ const getBusinessImage = (businessId: string, category: string) => {
 }
 
 export default async function BusinessPage({ params }: BusinessPageProps) {
-  const business = await getBusiness(params.id)
-
+  const _businessId = useParams()
+  const parsedId = Array.isArray(_businessId.id) ? _businessId.id[0] : _businessId.id
+  console.log(parsedId)
+  const business = await getBusiness(parsedId);
+  console.log(business)
   if (!business) {
     notFound()
   }
